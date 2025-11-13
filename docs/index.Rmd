@@ -1,29 +1,59 @@
 ---
-title: "Assessment"
+title: "Investigating anti-depressants (AD) prescriptions in NHS Health Boards from January to June 2025: are colder months correlated to increased seasonal depression and AD prescriptions or are trends constant?"
+author: "B209732"
 output: html_document
-date: "2025-11-13"
+date: "2025-11-14"
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+```{r}
+#Data packages used
+library(tidyverse)
+library(janitor)
+library(gt)
+library(here)
 ```
 
-## Including Plots
+```{r}
+#Open data - January 2025 to June 2025 
+data_jan_to_june2025 <- read_csv("https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/9de908b3-9c28-4cc3-aa32-72350a0579d1/download/hb_pitc2025_01_06.csv") %>% 
+  clean_names()
 
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+#Health Boards names and codes
+HB_lookup <- read_csv("https://www.opendata.nhs.scot/dataset/9f942fdb-e59e-44f5-b534-d6e17229cc7b/resource/652ff726-e676-4a20-abda-435b98dd7bdc/download/hb14_hb19.csv") %>% 
+  clean_names()
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r}
+#filter data to only contain one type AD - selective serotonin re-uptake inhibitors (SSRIs) - of all formulations
+data_jan_to_june2025 <- data_jan_to_june2025 %>% 
+  filter(str_detect(bnf_item_description, "SERTRALINE|CITALOPRAM|ESCITALOPRAM|FLUOXETINE|PAROXETINE")) %>%  full_join(HB_lookup, by = c("hbt" = "hb")) %>% 
+   select(hb_name, hbt:paid_date_month) 
+
+```
+
+```{r}
+#total per HB
+total_AD_per_HB <- data_jan_to_june2025 %>% 
+  group_by(hb_name) %>% 
+  summarise(total_per_HB = sum(paid_quantity, na.rm = TRUE)) %>% 
+  gt() %>% 
+  cols_label(total_per_HB = "Total AD quantity",
+             hb_name = "Health Board") %>% 
+  print(total_AD_per_HB)
+```
+
+```{r}
+#group by paid month date
+total_AD_per_month <- data_jan_to_june2025 %>% 
+  group_by(paid_date_month) %>% 
+  summarise(total_per_month = sum(paid_quantity, na.rm = TRUE)) %>% 
+  gt() %>% 
+  cols_label(total_per_month = "Total AD quantity",
+             paid_date_month = "Months") %>% 
+  print(total_AD_per_month)
+```
+
