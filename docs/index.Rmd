@@ -1,5 +1,5 @@
 ---
-title: "Investigating anti-depressants (AD) prescriptions in NHS Health Boards from January to June 2025: are colder months correlated to increased seasonal depression and AD prescriptions or are trends constant?"
+title: "Do anti-depressants prescription rise in winter months and/or in the deemest regions of Scotland?"
 author: "B209732"
 output: html_document
 date: "2025-11-14"
@@ -30,15 +30,15 @@ data_jan_to_june2025 <- read_csv("https://www.opendata.nhs.scot/dataset/84393984
 HB_lookup <- read_csv("https://www.opendata.nhs.scot/dataset/9f942fdb-e59e-44f5-b534-d6e17229cc7b/resource/652ff726-e676-4a20-abda-435b98dd7bdc/download/hb14_hb19.csv") %>% 
   clean_names()
 ```
-
+Keep our focus on SSRIs of all formulations
 ```{r}
-#filter data to only contain one type AD - selective serotonin re-uptake inhibitors (SSRIs) - of all formulations
+#filter data 
 data_jan_to_june2025 <- data_jan_to_june2025 %>% 
   filter(str_detect(bnf_item_description, "SERTRALINE|CITALOPRAM|ESCITALOPRAM|FLUOXETINE|PAROXETINE")) %>%  full_join(HB_lookup, by = c("hbt" = "hb")) %>% 
    select(hb_name, hbt:paid_date_month) 
 
 ```
-
+Here I will be removing the last row
 ```{r}
 #total per HB
 total_AD_per_HB <- data_jan_to_june2025 %>% 
@@ -49,7 +49,7 @@ total_AD_per_HB <- data_jan_to_june2025 %>%
              hb_name = "Health Board") %>% 
   print(total_AD_per_HB)
 ```
-
+Here I will be removing the last row and change the row names in the 'Months' column
 ```{r}
 #group by paid month date
 total_AD_per_month <- data_jan_to_june2025 %>% 
@@ -61,3 +61,5 @@ total_AD_per_month <- data_jan_to_june2025 %>%
   print(total_AD_per_month)
 ```
 
+I'm thinking of including both graphs and maps
+To account for the different population numbers in the different Health Boards, I'm thinking of joining the population data from the census to calculate the estimate AD prescription per person using the mean of the population from all the Health Boards.
