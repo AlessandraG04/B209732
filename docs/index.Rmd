@@ -4,8 +4,8 @@ title: "Do anti-depressants prescription rise in winter months and/or in the dim
 author: "B209732"
 date: "2025-11-14"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 
 Seasonal affective disorder (SAD) is a type of depression also known as the 'winter depression' because it's symptoms are more prevalent and severe during winter months. According to the NHS website, one treatment for SAD is the prescription of anti-depressants (ADs) such as selective serotonin re-uptake inhibitors (SSRIs) (https://www.nhs.uk/mental-health/conditions/seasonal-affective-disorder-sad/overview/ - accessed November 13th, 2025)
@@ -49,17 +49,6 @@ data_jan_to_june2025 %>%
   select(hb_name, paid_quantity) %>% 
   drop_na()%>% #to remove missing values
   group_by(hb_name) %>% 
-  summarise(total_per_HB = sum(paid_quantity, na.rm = TRUE)) %>% 
-    gt() %>% 
-  cols_label(total_per_HB = "Total AD quantity",
-             hb_name = "Health Board") %>% 
-  tab_header(title = "Total anti-depressants prescrption",
-             subtitle = "Data from NHS Borders and NHS Fife")
-
-data_jan_to_june2025 %>% 
-  select(hb_name, paid_quantity) %>% 
-  drop_na()%>% #to remove missing values
-  group_by(hb_name) %>% 
   ggplot(aes(x = hb_name, y = paid_quantity)) +
   geom_col() +
   labs(y = "Paid quantity", 
@@ -69,7 +58,13 @@ data_jan_to_june2025 %>%
   coord_flip()
 
 ```
+This graph shows that the greatest number of AD prescription is attributed to NHS Greater Glasgow and Clyde followed by NHS Lothian. This is probably because these Health Boards have higher populations compared to some other Health Boards. 
 
-I'm thinking of including both graphs and maps
-To show that the differences in paid quantity could be due becase of differences in population, I'm going to plot the population data for the different Health Boards.
-To account for the different population numbers in the different Health Boards, I'm thinking of joining the population data from the census to calculate the estimate AD prescription per person using the mean of the population from all the Health Boards.
+Next steps:
+- to show differences in population, the population data will be plotted
+- then the population data will be joined to the main dataset and AD prescription per person using the mean population across all Health Boards will be calculated and plotted - this shows whether colder regions of Scotland or those regions with less hours of daylight have higher AD prescriptions.
+- the main dataset will then be used to plot a graph showing differences in AD prescriptions across months
+
+- I'm also hoping to use maps
+- I may use tables to aid comparisons of numbers
+
