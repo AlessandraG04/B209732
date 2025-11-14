@@ -13,7 +13,7 @@ Seasonal affective disorder (SAD) is a type of depression also known as the 'win
 This report is going to investigate the link between AD prescriptions from January to June 2025, to see whether prescriptions were higher during winter months (January and February) compared to spring (March to June). Prescription data will be subdivided into Health Boards to investigate whether trends are similar across Health Boards or if changes arise due to some parts of Scotland being colder and dimmer compared to others.
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 ```
 
 ```{r}
