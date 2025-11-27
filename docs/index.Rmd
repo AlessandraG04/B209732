@@ -1,16 +1,16 @@
 ---
-title: "Do anti-depressants prescription rise in winter months and/or in the dimest
-  regions of Scotland?"
+title: "Do anti-depressants prescription rise in winter months and/or in household with lack of central heating?"
 author: "B209732"
 date: "2025-11-14"
 output:
-  html_document: default
-  pdf_document: default
+  html_document:
+    code_folding: hide
+  
 ---
 
 Seasonal affective disorder (SAD) is a type of depression also known as the 'winter depression' because it's symptoms are more prevalent and severe during winter months. According to the NHS website, one treatment for SAD is the prescription of anti-depressants (ADs) such as selective serotonin re-uptake inhibitors (SSRIs) (https://www.nhs.uk/mental-health/conditions/seasonal-affective-disorder-sad/overview/ - accessed November 13th, 2025)
 
-This report is going to investigate the link between AD prescriptions from January to June 2025, to see whether prescriptions were higher during winter months (January and February) compared to spring (March to June). Prescription data will be subdivided into Health Boards to investigate whether trends are similar across Health Boards or if changes arise due to some parts of Scotland being colder and dimmer compared to others.
+This report is going to investigate the link between AD prescriptions from January to June 2025, to see whether prescriptions were higher during winter months (January and February) compared to spring (March to June). Prescription data will be subdivided into Health Boards and links between number of households without central heating in each health board and and AD prescription will be investigated.
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
@@ -22,6 +22,8 @@ library(tidyverse)
 library(janitor)
 library(gt)
 library(here)
+library(sf)
+library(dbplyr)
 ```
 
 ```{r}
@@ -32,18 +34,50 @@ data_jan_to_june2025 <- read_csv("https://www.opendata.nhs.scot/dataset/84393984
 #Health Boards names and codes
 HB_lookup <- read_csv("https://www.opendata.nhs.scot/dataset/9f942fdb-e59e-44f5-b534-d6e17229cc7b/resource/652ff726-e676-4a20-abda-435b98dd7bdc/download/hb14_hb19.csv") %>% 
   clean_names()
+
+#Central heating data
+central_heating <- read_csv(here("data", "central_heating.csv"), skip = 10) %>% #skip the first 10 rows
+  clean_names() %>% 
+rename(hb_name = "health_board_area_2019",
+      n_households = "count") %>% 
+  select(hb_name, central_heating_in_household, n_households) %>% 
+  filter(str_detect(central_heating_in_household, "All occupied households|No central heating"))
+
+population_data <- read_csv(here("data/UV102a_age_health_board_census.csv"), skip = 10) %>%
+  # Rename the last column to avoid the messy name in column 6 and to match column names with the prescription dataset
+  rename(Spare = "...6",
+         hb_name = "Health Board Area 2019",
+         hb_population = Count) %>%  # filter the data so that we get the population of the entire health board
+  filter(Age == "All people" & Sex == "All people") %>% 
+  # select only the relevant columns
+  select(hb_name, hb_population) %>% 
+  # change health board names so they match the prescription data
+  mutate(hb_name = paste("NHS", hb_name))
+
 ```
 Keep our focus on SSRIs of all formulations
 ```{r}
 #filter data 
 data_jan_to_june2025 <- data_jan_to_june2025 %>% 
   filter(str_detect(bnf_item_description, "SERTRALINE|CITALOPRAM|ESCITALOPRAM|FLUOXETINE|PAROXETINE")) %>%  full_join(HB_lookup, by = c("hbt" = "hb")) %>% 
-   select(hb_name, paid_quantity, paid_date_month)
+   select(hb_name, bnf_item_description, paid_quantity, paid_date_month) %>% 
+  mutate(Months = str_replace_all(paid_date_month ,c('202501'='January', '202502'='February', '202503'='March', '202504'='April', '202505'='May', '202506'='June'))) 
   
-
 ```
 
+MADE TABLE TO SHOW THAT AD PRESCRIPTION DIFFERS IN DIFFERENT HEALTH BOARDS DUE TO DIFFERENCES IN POPULATION
 ```{r}
+data_jan_to_june2025 %>% 
+  select(hb_name, paid_quantity) %>% 
+  drop_na()%>% #to remove missing values
+  group_by(hb_name) %>% 
+  summarise(total_per_HB = sum(paid_quantity, na.rm = TRUE)) %>% 
+    gt() %>% 
+  cols_label(total_per_HB = "Total AD quantity",
+             hb_name = "Health Board") %>% 
+  tab_header(title = "Total anti-depressants prescrption",
+             subtitle = "Data from NHS Borders and NHS Fife")
+
 #total per HB
 data_jan_to_june2025 %>% 
   select(hb_name, paid_quantity) %>% 
@@ -57,14 +91,38 @@ data_jan_to_june2025 %>%
   theme_light()+
   coord_flip()
 
+ 
 ```
-This graph shows that the greatest number of AD prescription is attributed to NHS Greater Glasgow and Clyde followed by NHS Lothian. This is probably because these Health Boards have higher populations compared to some other Health Boards. 
 
-Next steps:
-- to show differences in population, the population data will be plotted
-- then the population data will be joined to the main dataset and AD prescription per person using the mean population across all Health Boards will be calculated and plotted - this shows whether colder regions of Scotland or those regions with less hours of daylight have higher AD prescriptions.
-- the main dataset will then be used to plot a graph showing differences in AD prescriptions across months
+THIS IS A PLOT THAT SHOWS THE DATA FROM THE TABLE ABOVE
+```{r}
 
-- I'm also hoping to use maps
-- I may use tables to aid comparisons of numbers
+data_jan_to_june2025 %>% 
+  select(paid_quantity, Months) %>% 
+  drop_na() %>% 
+  group_by(Months) %>% 
+  summarise(total_per_month = sum(paid_quantity, na.rm = TRUE)) %>% 
+  gt() %>% 
+  cols_label(total_per_month = "Total AD quantity per month") %>% 
+  tab_header(title = "Total anti-depressants prescription",
+             subtitle = "Quantity per month")
+
+data_jan_to_june2025 %>% 
+  select(paid_quantity, Months) %>% 
+  drop_na() %>% 
+  group_by(Months) %>% 
+  ggplot(aes(x = fct_inorder(Months), y = paid_quantity)) +
+  geom_col() +
+  labs(y = "Paid quantity",
+       x = "Months",
+       title = "Anti-depressants per months") +
+  theme_classic()
+
+```
+
+TRY TO DIVIDE DATA FOR EACH MONTH
+```{r}
+
+```
+
 
