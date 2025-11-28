@@ -24,6 +24,7 @@ library(gt)
 library(here)
 library(sf)
 library(dbplyr)
+library(ggplot2)
 ```
 Here we are opening the prescription data (available here:), Health Board codes and names (available here:), housing data (from census 2022) and population data (from census 2022)
 ```{r}
@@ -55,16 +56,26 @@ population_data <- read_csv(here("data/UV102a_age_health_board_census.csv"), ski
   # change health board names so they match the prescription data
   mutate(hb_name = paste("NHS", hb_name))
 
+NHS_healthboards <- st_read(here("data", "NHS_healthboards_2019.shp")) %>% 
+  rename(hb_name = "HBName") %>% 
+  mutate(hb_name = paste("NHS", hb_name)) %>% 
+  select(!HBCode)
+
 ```
 In this report we will be focusing on SSRIs. The SSRIs selected will be sertraline, citalopram, escitalopram, fluoxetine and paroxetine of all formulations.
 ```{r}
 #filter data 
 data_jan_to_june2025 <- data_jan_to_june2025 %>% 
-  filter(str_detect(bnf_item_description, "SERTRALINE|CITALOPRAM|ESCITALOPRAM|FLUOXETINE|PAROXETINE")) %>%  full_join(HB_lookup, by = c("hbt" = "hb")) %>% #joined the Health Board data with names and codes
-   select(hb_name, bnf_item_description, paid_quantity, paid_date_month) %>% 
+  filter(str_detect(bnf_item_description, "SERTRALINE|CITALOPRAM|ESCITALOPRAM|FLUOXETINE|PAROXETINE")) %>%
+  full_join(HB_lookup, by = c("hbt" = "hb")) %>% #joined the Health Board data with names and codes
   mutate(Months = str_replace_all(paid_date_month ,c('202501'='January', '202502'='February', '202503'='March', '202504'='April', '202505'='May', '202506'='June'))) %>%  #replaced the numerical date with a character one
   full_join(population_data) %>% 
-  mutate(AD_per_1k = (paid_quantity/hb_population)*1000)
+  mutate(AD_per_1k = (paid_quantity/hb_population)*1000) 
+ 
+data_jan_to_june2025 <- NHS_healthboards %>% 
+  full_join(data_jan_to_june2025)
+
+
 ```
 
 Table 1 and Figure 1:
@@ -93,11 +104,9 @@ data_jan_to_june2025 %>%
   theme_light()+
   coord_flip()
 
- 
 ```
 Show the current distribution of AD per 1k of population
 
-THIS IS A PLOT THAT SHOWS THE DATA FROM THE TABLE ABOVE
 ```{r}
 
 data_jan_to_june2025 %>% 
@@ -142,4 +151,47 @@ data_jan_to_june2025 %>%
 
 ```
 
+From here we can see that AD prescription for each Health Board did not change across months, but maintained a pattern. 
+Now we are going to see whether lack of central heating is correlated with higher prescription of ADs
+
+```{r}
+jan_to_june2025_summary <- data_jan_to_june2025 %>% 
+  select(hb_name, AD_per_1k, hb_population) %>% 
+  drop_na() %>% 
+  group_by(hb_name, hb_population) %>% 
+  reframe(total_AD_per_HB_per_1k = sum(AD_per_1k, na.rm = TRUE)) %>% 
+  full_join(central_heating) %>% 
+  mutate(household_per_1k = (n_households/hb_population)*1000)
+
+```
+
+```{r}
+jan_to_june2025_summary %>% 
+  select(household_per_1k, hb_name, central_heating_in_household) %>% 
+  filter(central_heating_in_household == "No central heating") %>% 
+  group_by(hb_name) %>% 
+  summarise(total_no_heating_per_HB = sum(household_per_1k, na.rm = TRUE)) %>% 
+    gt() %>% 
+  cols_label(total_no_heating_per_HB = "Total number of households per 1k population without central heating", hb_name = "Health Boards") %>% 
+  tab_header(title = "Total number of households without central heating",
+             subtitle = "Data from NHS Borders and NHS Fife")
+
+jan_to_june2025_summary %>% 
+  select(household_per_1k, hb_name, central_heating_in_household) %>% 
+  filter(central_heating_in_household == "No central heating") %>% 
+  group_by(hb_name) %>% 
+  summarise(total_no_heating_per_HB = sum(household_per_1k, na.rm = TRUE)) %>% 
+  ggplot(aes(x = hb_name, y = total_no_heating_per_HB)) + 
+  geom_col() +
+  labs(y = "Households/1k without central heating",
+       x = "Health Boards",
+       title = "Households/1k in each Health Board") +
+  theme_classic()+
+  coord_flip()
+```
+Here we can see that some Health Boards more than others have more households without central heating. Will AD prescription be higher in those Health Boards? If so, then there might be a correlation between cold houses and AD prescription.
+
+```{r}
+
+```
 
