@@ -10,7 +10,7 @@ output:
 
 Seasonal affective disorder (SAD) is a type of depression also known as the 'winter depression' because it's symptoms are more prevalent and severe during winter months. According to the NHS website, one treatment for SAD is the prescription of anti-depressants (ADs) such as selective serotonin re-uptake inhibitors (SSRIs) (https://www.nhs.uk/mental-health/conditions/seasonal-affective-disorder-sad/overview/ - accessed November 13th, 2025)
 
-This report is going to investigate the link between AD prescriptions from January to June 2025, to see whether prescriptions were higher during winter months (January and February) compared to spring (March to June). Prescription data will be subdivided into Health Boards and links between number of households without central heating in each health board and and AD prescription will be investigated.
+This report is going to investigate the link between AD prescriptions from January to June 2025, to see whether prescriptions were higher during winter months (January and February) compared to spring (March to June). Prescription data will be subdivided into Health Boards to see whether monthly trends are observed across different parts of Scotland and to see the links between number of households without central heating in each health board and and AD prescription.
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
@@ -25,7 +25,7 @@ library(here)
 library(sf)
 library(dbplyr)
 ```
-
+Here we are opening the prescription data (available here:), Health Board codes and names (available here:), housing data (from census 2022) and population data (from census 2022)
 ```{r}
 #Open data - January 2025 to June 2025 
 data_jan_to_june2025 <- read_csv("https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/9de908b3-9c28-4cc3-aa32-72350a0579d1/download/hb_pitc2025_01_06.csv") %>% 
@@ -41,7 +41,8 @@ central_heating <- read_csv(here("data", "central_heating.csv"), skip = 10) %>% 
 rename(hb_name = "health_board_area_2019",
       n_households = "count") %>% 
   select(hb_name, central_heating_in_household, n_households) %>% 
-  filter(str_detect(central_heating_in_household, "All occupied households|No central heating"))
+  filter(str_detect(central_heating_in_household, "All occupied households|No central heating")) %>% 
+   mutate(hb_name = paste("NHS", hb_name))
 
 population_data <- read_csv(here("data/UV102a_age_health_board_census.csv"), skip = 10) %>%
   # Rename the last column to avoid the messy name in column 6 and to match column names with the prescription dataset
@@ -55,37 +56,38 @@ population_data <- read_csv(here("data/UV102a_age_health_board_census.csv"), ski
   mutate(hb_name = paste("NHS", hb_name))
 
 ```
-Keep our focus on SSRIs of all formulations
+In this report we will be focusing on SSRIs. The SSRIs selected will be sertraline, citalopram, escitalopram, fluoxetine and paroxetine of all formulations.
 ```{r}
 #filter data 
 data_jan_to_june2025 <- data_jan_to_june2025 %>% 
-  filter(str_detect(bnf_item_description, "SERTRALINE|CITALOPRAM|ESCITALOPRAM|FLUOXETINE|PAROXETINE")) %>%  full_join(HB_lookup, by = c("hbt" = "hb")) %>% 
+  filter(str_detect(bnf_item_description, "SERTRALINE|CITALOPRAM|ESCITALOPRAM|FLUOXETINE|PAROXETINE")) %>%  full_join(HB_lookup, by = c("hbt" = "hb")) %>% #joined the Health Board data with names and codes
    select(hb_name, bnf_item_description, paid_quantity, paid_date_month) %>% 
-  mutate(Months = str_replace_all(paid_date_month ,c('202501'='January', '202502'='February', '202503'='March', '202504'='April', '202505'='May', '202506'='June'))) 
-  
+  mutate(Months = str_replace_all(paid_date_month ,c('202501'='January', '202502'='February', '202503'='March', '202504'='April', '202505'='May', '202506'='June'))) %>%  #replaced the numerical date with a character one
+  full_join(population_data) %>% 
+  mutate(AD_per_1k = (paid_quantity/hb_population)*1000)
 ```
 
-MADE TABLE TO SHOW THAT AD PRESCRIPTION DIFFERS IN DIFFERENT HEALTH BOARDS DUE TO DIFFERENCES IN POPULATION
+Table 1 and Figure 1:
 ```{r}
 data_jan_to_june2025 %>% 
-  select(hb_name, paid_quantity) %>% 
+  select(hb_name, AD_per_1k, hb_population) %>% 
   drop_na()%>% #to remove missing values
   group_by(hb_name) %>% 
-  summarise(total_per_HB = sum(paid_quantity, na.rm = TRUE)) %>% 
+  summarise(total_per_HB = sum(AD_per_1k, na.rm = TRUE)) %>% 
     gt() %>% 
   cols_label(total_per_HB = "Total AD quantity",
              hb_name = "Health Board") %>% 
-  tab_header(title = "Total anti-depressants prescrption",
+  tab_header(title = "Total anti-depressants prescrption per 1k of population",
              subtitle = "Data from NHS Borders and NHS Fife")
 
 #total per HB
 data_jan_to_june2025 %>% 
-  select(hb_name, paid_quantity) %>% 
+  select(hb_name, AD_per_1k) %>% 
   drop_na()%>% #to remove missing values
   group_by(hb_name) %>% 
-  ggplot(aes(x = hb_name, y = paid_quantity)) +
+  ggplot(aes(x = hb_name, y = AD_per_1k)) +
   geom_col() +
-  labs(y = "Paid quantity", 
+  labs(y = "Paid quantity per 1k population", 
        x = "Health Boards",
        title = "Anti-depressants prescription in each Health Board") +
   theme_light()+
@@ -93,6 +95,7 @@ data_jan_to_june2025 %>%
 
  
 ```
+Show the current distribution of AD per 1k of population
 
 THIS IS A PLOT THAT SHOWS THE DATA FROM THE TABLE ABOVE
 ```{r}
@@ -111,7 +114,7 @@ data_jan_to_june2025 %>%
   select(paid_quantity, Months) %>% 
   drop_na() %>% 
   group_by(Months) %>% 
-  ggplot(aes(x = fct_inorder(Months), y = paid_quantity)) +
+  ggplot(aes(x = fct_inorder(Months), y = paid_quantity)) + #to make sure ggplot doesn't order months alphabetically
   geom_col() +
   labs(y = "Paid quantity",
        x = "Months",
@@ -119,9 +122,23 @@ data_jan_to_june2025 %>%
   theme_classic()
 
 ```
+This data shows that there is not a trend in which AD in prescribed more in winter months, it looks like there is a wave of prescription
 
 TRY TO DIVIDE DATA FOR EACH MONTH
 ```{r}
+
+data_jan_to_june2025 %>% 
+  select(AD_per_1k, Months, hb_name) %>% 
+  drop_na() %>% 
+  group_by(hb_name) %>% 
+   ggplot(aes(x = hb_name, y = AD_per_1k)) + 
+  geom_col() +
+  labs(y = "Paid quantity",
+       x = "Health Boards",
+       title = "Trends of anti-depressants prescription per Health Board, from January to June") +
+  theme_bw() +
+  coord_flip() +
+  facet_grid(cols = vars(fct_inorder(Months)))
 
 ```
 
