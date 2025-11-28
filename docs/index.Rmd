@@ -56,11 +56,6 @@ population_data <- read_csv(here("data/UV102a_age_health_board_census.csv"), ski
   # change health board names so they match the prescription data
   mutate(hb_name = paste("NHS", hb_name))
 
-NHS_healthboards <- st_read(here("data", "NHS_healthboards_2019.shp")) %>% 
-  rename(hb_name = "HBName") %>% 
-  mutate(hb_name = paste("NHS", hb_name)) %>% 
-  select(!HBCode)
-
 ```
 In this report we will be focusing on SSRIs. The SSRIs selected will be sertraline, citalopram, escitalopram, fluoxetine and paroxetine of all formulations.
 ```{r}
@@ -71,11 +66,6 @@ data_jan_to_june2025 <- data_jan_to_june2025 %>%
   mutate(Months = str_replace_all(paid_date_month ,c('202501'='January', '202502'='February', '202503'='March', '202504'='April', '202505'='May', '202506'='June'))) %>%  #replaced the numerical date with a character one
   full_join(population_data) %>% 
   mutate(AD_per_1k = (paid_quantity/hb_population)*1000) 
- 
-data_jan_to_june2025 <- NHS_healthboards %>% 
-  full_join(data_jan_to_june2025)
-
-
 ```
 
 Table 1 and Figure 1:
