@@ -5,12 +5,14 @@ date: "2025-11-14"
 output:
   html_document:
     code_folding: hide
+    latex_engine: xelatex
+mainfont: "Times New Roman"
   
 ---
 
 Seasonal affective disorder (SAD) is a type of depression also known as the 'winter depression' because it's symptoms are more prevalent and severe during winter months. According to the NHS website, one treatment for SAD is the prescription of anti-depressants (ADs) such as selective serotonin re-uptake inhibitors (SSRIs) (https://www.nhs.uk/mental-health/conditions/seasonal-affective-disorder-sad/overview/ - accessed November 13th, 2025)
 
-This report is going to investigate the link between AD prescriptions from January to June 2025, to see whether prescriptions were higher during winter months (January and February) compared to spring (March to June). Prescription data will be subdivided into Health Boards to see whether monthly trends are observed across different parts of Scotland and to see the links between number of households without central heating in each health board and and AD prescription.
+This report is going to investigate the link between AD prescriptions from January to June 2025, to see whether prescriptions were higher during winter months (January and February) compared to spring (March to June). Prescription data will be subdivided into Health Boards to see whether prescriptions across Health Boards varies or stays stable depending on the months. The links between number of households without central heating in each health board and and AD prescription will also be investigated. A study has suggested that people living in colder households are more likely to develop mental distress even when they didn't have any (reference)
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
@@ -22,11 +24,10 @@ library(tidyverse)
 library(janitor)
 library(gt)
 library(here)
-library(sf)
-library(dbplyr)
+library(dplyr)
 library(ggplot2)
 ```
-Here we are opening the prescription data (available here:), Health Board codes and names (available here:), housing data (from census 2022) and population data (from census 2022)
+Here we will be using prescription data (available here:), Health Board codes and names (available here:), housing data (from census 2022) and population data (from census 2022)
 ```{r}
 #Open data - January 2025 to June 2025 
 data_jan_to_june2025 <- read_csv("https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/9de908b3-9c28-4cc3-aa32-72350a0579d1/download/hb_pitc2025_01_06.csv") %>% 
@@ -57,7 +58,7 @@ population_data <- read_csv(here("data/UV102a_age_health_board_census.csv"), ski
   mutate(hb_name = paste("NHS", hb_name))
 
 ```
-In this report we will be focusing on SSRIs. The SSRIs selected will be sertraline, citalopram, escitalopram, fluoxetine and paroxetine of all formulations.
+In this report we will be focusing on SSRIs. The SSRIs selected will be sertraline, citalopram, escitalopram, fluoxetine and paroxetine of all formulations. Since each Health Board has different populations, the AD prescription per 1000 people will be used.
 ```{r}
 #filter data 
 data_jan_to_june2025 <- data_jan_to_june2025 %>% 
@@ -95,8 +96,9 @@ data_jan_to_june2025 %>%
   coord_flip()
 
 ```
-Show the current distribution of AD per 1k of population
+Table and and Figure 1 show the distribution of AD/1k population across Health Boards. As it can be seen, AD prescription is fairly constant across Health Boards, with some regions of Scotland having slighly lower prescription compared to others.
 
+Now we are going to look at the total quantity of AD prescription for each month, to see whether prescription changes according to seasons.
 ```{r}
 
 data_jan_to_june2025 %>% 
@@ -121,10 +123,10 @@ data_jan_to_june2025 %>%
   theme_classic()
 
 ```
-This data shows that there is not a trend in which AD in prescribed more in winter months, it looks like there is a wave of prescription
+Table 2 and Figure 2 show that there doesn't seem to be a trend between AD prescription and seasons. However, it seems that a month with high prescription usually seems to follow two months with lower prescriptions, almost like a wave.  
 
-TRY TO DIVIDE DATA FOR EACH MONTH
-```{r}
+Now we are going to look at whether monthly trends differ or are stable acros Health Boards, to see whether some Health Boards are affected by seasons more than others. 
+```{r, fig.width=10,fig.height=8}
 
 data_jan_to_june2025 %>% 
   select(AD_per_1k, Months, hb_name) %>% 
@@ -140,10 +142,10 @@ data_jan_to_june2025 %>%
   facet_grid(cols = vars(fct_inorder(Months)))
 
 ```
-
 From here we can see that AD prescription for each Health Board did not change across months, but maintained a pattern. 
-Now we are going to see whether lack of central heating is correlated with higher prescription of ADs
+Now we can conclude that seasonsal changes doesn't affect AD prescription in Scotland.
 
+Now we are going to see whether lack of central heating is correlated with higher prescription of ADs. Since each health board has different populations, they will also have different number of households. Therefore we are going to look at households per 1000 people. Limitations is that we don't know how big these households would be, therefore how many people are in each household (could calcualte how many in each household by diving population by n_household), then household per 1k population.
 ```{r}
 jan_to_june2025_summary <- data_jan_to_june2025 %>% 
   select(hb_name, AD_per_1k, hb_population) %>% 
@@ -151,10 +153,14 @@ jan_to_june2025_summary <- data_jan_to_june2025 %>%
   group_by(hb_name, hb_population) %>% 
   reframe(total_AD_per_HB_per_1k = sum(AD_per_1k, na.rm = TRUE)) %>% 
   full_join(central_heating) %>% 
-  mutate(household_per_1k = (n_households/hb_population)*1000)
+  mutate(household_per_1k = (n_households/hb_population)*1000, people_per_household = (hb_population/n_households))
+
+jan_to_june2025_summary %>% 
+  filter(central_heating_in_household == "All occupied households") %>% 
+  summarise(average_n_per_household = mean(people_per_household))
 
 ```
-
+By only looking at the data available for all households, we can see that roughly in all Health Boards, 2.14 people live in each household. 
 ```{r}
 jan_to_june2025_summary %>% 
   select(household_per_1k, hb_name, central_heating_in_household) %>% 
@@ -162,8 +168,8 @@ jan_to_june2025_summary %>%
   group_by(hb_name) %>% 
   summarise(total_no_heating_per_HB = sum(household_per_1k, na.rm = TRUE)) %>% 
     gt() %>% 
-  cols_label(total_no_heating_per_HB = "Total number of households per 1k population without central heating", hb_name = "Health Boards") %>% 
-  tab_header(title = "Total number of households without central heating",
+  cols_label(total_no_heating_per_HB = "Total number of households without central heating", hb_name = "Health Boards") %>% 
+  tab_header(title = "Total number of households without central heating per 1k population",
              subtitle = "Data from NHS Borders and NHS Fife")
 
 jan_to_june2025_summary %>% 
@@ -179,9 +185,16 @@ jan_to_june2025_summary %>%
   theme_classic()+
   coord_flip()
 ```
-Here we can see that some Health Boards more than others have more households without central heating. Will AD prescription be higher in those Health Boards? If so, then there might be a correlation between cold houses and AD prescription.
+Here we can see that some Health Boards have more houses without central heating compared to others, with the highest number attributed to NHS Orkney.
+
+_Will AD prescription be higher in those Health Boards?_
+If so, then there might be a correlation between cold houses and AD prescription.
 
 ```{r}
-
+jan_to_june2025_summary_plot <- jan_to_june2025_summary %>% 
+  filter(central_heating_in_household == "No central heating") %>% 
+  ggplot(aes(fill = household_per_1k, y = total_AD_per_HB_per_1k, x = hb_name))+
+    geom_bar(position = "fill", stat = "identity")+
+    coord_flip()
 ```
 
