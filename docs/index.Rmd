@@ -1,11 +1,10 @@
 ---
-title: "Is there a link between anti-depressants (ADs) prescription and lack of central heating?"
+title: "Is there a link between antidepressants (ADs) prescription and lack of central heating?"
 author: "B209732"
 date: "2025-12-01"
 output:
   html_document:
     code_folding: hide
-  
 ---
 
 A study by Clair and Baker (2022) has reported that living in cold homes could have detrimental effects on mental health. Their study, carried out in the UK, has found an increase in mental distress in participants who were unable to keep their house warm. The mental distress experienced by the participants in the study could be attributed to reduced feelings of autonomy, effects on sleep and as a result of feeling cold all the time. The latter is of particular concern in winter months (clair and Baker, 2022). 
@@ -13,6 +12,10 @@ A study by Clair and Baker (2022) has reported that living in cold homes could h
 Winter is a time in which some people may experience seasonal affective disorder (SAD), as a result of being exposed to less hours of light. This is a type of depression and could be exacerbated by factors such as living in colder houses, such as those lacking central heating.  (https://www.mind.org.uk/information-support/types-of-mental-health-problems/seasonal-affective-disorder-sad/understanding-your-experiences/ - accessed Novermber 3oth, 2025). By looking at the data available in the Scottish Census, a number of households across Scotland currently lack central heating.
 
 This report will investigate the link between lack of central heating and SAD/mental distress by looking at antidepressants (ADs) prescription across all the Health Boards (HBs). This is because ADs are commonly prescribed as a treatment for SAD and mental distress such as increased anxiety. Data across HBs will be used to identify patterns across Scotland (https://www.nhs.uk/mental-health/conditions/seasonal-affective-disorder-sad/overview/ - accessed November 13th, 2025). 
+
+**The importance of this investigation is gain the governments attention regarding housing conditions and its importance in relation to mental health (clair and Baker, 2022)**
+
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
@@ -47,23 +50,22 @@ central_heating <- read_csv(here("data", "central_heating.csv"), skip = 10) %>% 
 rename(hb_name = "health_board_area_2019",
       n_households = "count") %>% 
   select(hb_name, central_heating_in_household, n_households) %>% 
-  filter(str_detect(central_heating_in_household, "All occupied households|No central heating")) %>% 
-   mutate(hb_name = paste("NHS", hb_name))
+  filter(str_detect(central_heating_in_household, "All occupied households|No central heating")) %>% #only keep relevant information
+   mutate(hb_name = paste("NHS", hb_name))# change health board names so they match the prescription data
 
 population_data <- read_csv(here("data/UV102a_age_health_board_census.csv"), skip = 10) %>%
   # Rename the last column to avoid the messy name in column 6 and to match column names with the prescription dataset
   rename(Spare = "...6",
          hb_name = "Health Board Area 2019",
-         hb_population = Count) %>%  # filter the data so that we get the population of the entire health board
-  filter(Age == "All people" & Sex == "All people") %>% 
+         hb_population = Count) %>% 
+  filter(Age == "All people" & Sex == "All people") %>% # filter the data so that we get the population of the entire health board
   # select only the relevant columns
   select(hb_name, hb_population) %>% 
-  # change health board names so they match the prescription data
   mutate(hb_name = paste("NHS", hb_name))
 
 ```
 
-For this report, the focus will be on the prescription of selective serotonin re-uptake inhibitors such as sertraline, citalopram, escitalopram, fluoxetine and paroxetine, of all formulations (https://www.nhs.uk/medicines/antidepressants/ - accessed November 30th 2025).
+For this report, the focus will be on the prescription of selective serotonin re-uptake inhibitors such as Sertraline, Citalopram, Escitalopram, Fluoxetine and Paroxetine, of all formulations (https://www.nhs.uk/medicines/antidepressants/ - accessed November 30th 2025).
 
 ```{r}
 #filter SSRIs 
@@ -118,7 +120,6 @@ Now we are going to look at the total quantity of AD prescription for each month
 **Table 2: AD prescription per month (January to June 2025)**
 ```{r}
 
-#change how to calculate total AD we can't add up percentages
 data_jan_to_june2025 %>% 
   select(paid_quantity, Months) %>% 
   drop_na() %>% 
@@ -141,7 +142,7 @@ data_jan_to_june2025 %>%
   labs(y = "Paid quantity",
        x = "Months",
        title = "Anti-depressants per months") +
-  theme_classic()
+  theme_light()
 
 ```
 
@@ -149,7 +150,7 @@ Table 2 and Figure 2 show that there doesn't seem to be a trend between AD presc
 
 Now we are going to look at whether Health Boards trends are stable across months, to identify whether some parts of Scotland are affected by seasons more than others. 
 
-**Figure 3: Comparison of AD prescription per Health Boards, from January to June 2025**
+**Figure 3: Comparison of AD prescription/1k population per Health Boards, from January to June 2025**
 ```{r, fig.width=10,fig.height=8} 
 
 data_jan_to_june2025 %>% 
@@ -161,7 +162,7 @@ data_jan_to_june2025 %>%
   labs(y = "Paid quantity",
        x = "Health Boards",
        title = "Trends of anti-depressants prescription per Health Board, from January to June") +
-  theme_bw() +
+  theme_light() +
   coord_flip() +
   facet_grid(cols = vars(fct_inorder(Months)))
 
@@ -173,40 +174,34 @@ Now we are going to look at whether lack of central heating is correlated with h
 ```{r}
 central_heating_per_HB <- data_jan_to_june2025 %>% 
   select(hb_name, AD_per_1k, hb_population) %>%
-  drop_na() %>% 
   group_by(hb_name, hb_population) %>% 
-  reframe(total_AD_per_HB_per_1k = sum(AD_per_1k, na.rm = TRUE)) %>% #used reframe as summarise did not allow for result to be attributed to more than one row?
+  reframe(total_AD_per_HB_per_1k = sum(AD_per_1k, na.rm = TRUE)) %>% #used reframe instead of summarise to avoid warning message
   full_join(central_heating) %>% 
-  filter(central_heating_in_household == "No central heating") %>% #we wre only interested at houses lacking central heating
-  mutate(household_per_1k = (n_households/hb_population)*1000, people_per_household = (hb_population/n_households))
-#since each Health Board has different populations, each one will also have a different number of households, therefore we will at number of households per 1k population
+  filter(central_heating_in_household == "No central heating") %>% #we are only interested at houses lacking central heating
+  mutate(household_per_1k = (n_households/hb_population)*1000)
+#since each Health Board has different populations, each one will also have a different number of households, therefore we will look at number of households per 1k population
 
 central_heating_per_HB %>% 
-  summarise(average_n_per_household = mean(people_per_household))#here we estimated how many people usually live in each household - 2.14 people
+  summarise(average_n_per_household = mean(household_per_1k))#here we estimated how many people usually live in each household - 2.14 people
 
 ```
 
 **Table 3: Number of households lackign central heating/1k population across Health Boards** 
 ```{r}
+
 central_heating_per_HB %>% 
-  select(household_per_1k, hb_name, central_heating_in_household) %>% 
-  group_by(hb_name) %>% 
-  summarise(total_no_heating_per_HB = sum(household_per_1k, na.rm = TRUE)) %>% 
+   select(hb_name, household_per_1k) %>% 
     gt() %>% 
-  cols_label(total_no_heating_per_HB = "Total number of households without central heating", hb_name = "Health Boards") %>% 
+  cols_label(household_per_1k = "Total number of households without central heating", hb_name = "Health Boards") %>% 
   tab_header(title = "Total number of households without central heating per 1k population",
              subtitle = "Data from NHS Borders and NHS Fife")
 
 ```
 
-**Figure 4: Number of households lackign central heating/1k population across Health Boards** 
+**Figure 4: Number of households lacking central heating/1k population across Health Boards** 
 ```{r}
 central_heating_per_HB %>% 
-  select(household_per_1k, hb_name, central_heating_in_household) %>% 
-  filter(central_heating_in_household == "No central heating") %>% 
-  group_by(hb_name) %>% 
-  summarise(total_no_heating_per_HB = sum(household_per_1k, na.rm = TRUE)) %>% 
-  ggplot(aes(x = hb_name, y = total_no_heating_per_HB)) + 
+  ggplot(aes(x = hb_name, y = household_per_1k)) + 
   geom_col() +
   labs(y = "Households/1k without central heating",
        x = "Health Boards",
@@ -220,3 +215,35 @@ From table 3 and Figure 4 we can see that some Health Boards have more houses la
 _Will AD prescription be higher in those Health Boards?_
 If so, then there might be a correlation between cold houses and AD prescription.
 
+**Figure 5:Comparison of ADs and lack of central heating, per 1k population**
+```{r}
+
+AD_and_heating_comparison <- data_jan_to_june2025 %>% 
+  full_join(central_heating_per_HB) %>% 
+  select(hb_name, household_per_1k, AD_per_1k) %>% 
+  drop_na()
+
+AD_and_heating_comparison %>% 
+  pivot_longer(cols = !hb_name, names_to = "comparison", values_to = "total_per_1k_population") %>% 
+  ggplot(aes(fill = comparison, y = total_per_1k_population, x = hb_name))+
+    geom_bar(position = "stack", stat = "identity")+
+  labs(y = "Total per 1k population",
+       x = "Health Boards",
+       title = "Comparison of ADs prescription and lack of central heating")+
+    coord_flip()
+```
+
+Figure 4 shows that there doesn't seem to be a link between lack of central heating and AD prescription. As we can see, the bar with the highest number of households without heating (eg. NHS Highland) is not overall the greatest bar, and one of the lower bars with low number of households without heating (eg. HNS Forth Valley) is one of the highest bars overall.
+
+Overall, we can conclude that in Scotland, there doesn't seem to be a recent worsening of mental health related to colder temperatures and lack of central heating. Nevertheless, lack of central heating can still affect the health and wellbeing of individuals and therefore more attention should be given on this issue.
+
+**REFERENCES:**check references
+
+Clair A, Baker E (2022). Cold homes and mental health harm: evidence from the UK household longitudinal study. Social Science & Medicine, 115461. 
+https://doi.org/10.1016/j.socscimed.2022.115461
+
+https://www.mind.org.uk/information-support/types-of-mental-health-problems/seasonal-affective-disorder-sad/understanding-your-experiences/. Accessed: November 30th, 2025
+
+https://www.nhs.uk/mental-health/conditions/seasonal-affective-disorder-sad/overview/. Accessed: November 13th, 2025
+
+https://www.nhs.uk/medicines/antidepressants/. Accessed: November 30th 2025
