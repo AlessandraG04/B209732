@@ -7,13 +7,13 @@ output:
     code_folding: hide
 ---
 
-A study by Clair and Baker (2022) has reported that living in cold homes could have detrimental effects on mental health. Their study, carried out in the UK, has found an increase in mental distress in participants who were unable to keep their house warm. The mental distress experienced by the participants in the study could be attributed to reduced feelings of autonomy, effects on sleep and as a result of feeling cold all the time. The latter is of particular concern in winter months (clair and Baker, 2022). 
+A study by Clair and Baker (2022) has reported that living in cold homes could have detrimental effects on mental health. Their study, carried out in the UK, has found an increase in mental distress in participants who were unable to keep their house warm. The mental distress experienced by the participants in the study could be attributed to reduced feelings of autonomy, effects on sleep and as a result of feeling cold all the time. The latter is of particular concern in winter months (Clair and Baker, 2022). 
 
-Winter is a time in which some people may experience seasonal affective disorder (SAD), as a result of being exposed to less hours of light. This is a type of depression and could be exacerbated by factors such as living in colder houses, such as those lacking central heating ( _Understanding seasonal affective disorder_ (SAD), 2025). By looking at the data available in the Scottish Census 2022, a number of households across Scotland currently lack central heating.
+Winter is a time in which some people may experience seasonal affective disorder (SAD), as a result of being exposed to less hours of light. This is a type of depression and could be exacerbated by factors such as living in colder houses, such as those lacking central heating ( _Understanding seasonal affective disorder (SAD)_, 2025). By looking at the data available in the Scottish Census 2022, a number of households across Scotland currently lack central heating.
 
-This report will investigate the link between lack of central heating and SAD/mental distress by looking at antidepressants (ADs) prescription across all the Health Boards in Scotland. This is because ADs are commonly prescribed as a treatment for SAD and mental distress such as increased anxiety. Data across Health Boards will be used to identify patterns across Scotland. ( _Overview - seasonal affective disorder_ (SAD), 2025). 
+This report will investigate the link between lack of central heating and SAD/mental distress by looking at antidepressants (ADs) prescription across all the Health Boards in Scotland. This is because ADs are commonly prescribed as a treatment for SAD and mental distress such as increased anxiety. Data across Health Boards will be used to identify patterns across Scotland. ( _Overview - seasonal affective disorder (SAD)_, 2025). 
 
-**The importance of this investigation is to gain the government's attention regarding housing conditions and its importance in relation to mental health (clair and Baker, 2022)**
+**The importance of this investigation is to gain the government's attention regarding housing conditions and its importance in relation to mental health (Clair and Baker, 2022)**
 
 
 ```{r setup, include=FALSE}
@@ -30,6 +30,7 @@ library(dplyr)
 library(ggplot2)
 ```
 The data used in this report can be found in the Public Health Scotland data sets and Scottish Census 2022:
+
 * Prescription data: https://www.opendata.nhs.scot/dataset/prescriptions-in-the-community/resource/9de908b3-9c28-4cc3-aa32-72350a0579d1
 
 * Health Boards (HB) names and codes: https://www.opendata.nhs.scot/dataset/geography-codes-and-labels/resource/652ff726-e676-4a20-abda-435b98dd7bdc
@@ -79,59 +80,7 @@ data_jan_to_june2025 <- data_jan_to_june2025 %>%
   mutate(AD_per_1k = (paid_quantity/hb_population)*1000) #Since each Health Board has different populations, the AD prescription per 1000 people will be used for comparison
 ```
 
-We will start the investigation by looking at the recent distribution of ADs across Health Boards in Scotland
-
-**Table 1: Distribution of AD/1k population across Health Boards in Scotland**
-```{r}
-data_jan_to_june2025 %>% 
-  select(hb_name, AD_per_1k, hb_population) %>%
-  drop_na()%>% #to remove missing values
-  group_by(hb_name) %>% 
-  summarise(total_per_HB = sum(AD_per_1k, na.rm = TRUE)) %>% 
-    gt() %>% 
-  cols_label(total_per_HB = "Total AD quantity",
-             hb_name = "Health Board") %>% 
-  tab_header(title = "Total anti-depressants prescrption per 1k of population",
-             subtitle = "Data from NHS Borders and NHS Fife")
-
-```
-
-Below, we can see a graphical representation of the data presented in the table above.
-
-**Figure 1: Distribution of AD/1k population across HBs in Scotland**
-```{r}
-#total per HB
-data_jan_to_june2025 %>% 
-  select(hb_name, AD_per_1k) %>% 
-  drop_na()%>% #to remove missing values
-  group_by(hb_name) %>% 
-  ggplot(aes(x = hb_name, y = AD_per_1k)) +
-  geom_col() +
-  labs(y = "Paid quantity per 1k population", 
-       x = "Health Boards",
-       title = "Anti-depressants prescription in each Health Board") +
-  theme_light()+
-  coord_flip()
-
-```
-
-_Table 1 and Figure 1 show the recent distribution of ADs across Scotland. As we can see AD prescription is fairly constant across Health Boards, with some regions of Scotland having slightly higher prescriptions compared to others, for example, NHS Lanarkshire._
-
-Now we are going to look at the total quantity of AD prescription for each month, to see whether prescription changes according to seasons.
-
-**Table 2: AD prescription per month (January to June 2025)**
-```{r}
-
-data_jan_to_june2025 %>% 
-  select(paid_quantity, Months) %>% 
-  drop_na() %>% 
-  group_by(Months) %>% 
-  summarise(total_per_month = sum(paid_quantity, na.rm = TRUE)) %>% 
-  gt() %>% 
-  cols_label(total_per_month = "Quantity") %>% 
-  tab_header(title = "Total anti-depressants prescription",
-             subtitle = "Quantity per month")
-```
+We will start the investigation by looking at the distribution of AD prescription from January to June 2025
 
 **Figure 2: AD prescription per month (January to June 2025)**
 ```{r}
@@ -148,11 +97,11 @@ data_jan_to_june2025 %>%
 
 ```
 
-_Table 2 and Figure 2 show that there doesn't seem to be a trend between AD prescription and seasons but rather that a month with high prescription usually follows two months with lower prescriptions. This suggests that colder temperatures don't seem to be associated with increased SAD/mental distress in people living in Scotland compared to warmer temperatures._   
+_Figure 1 show that there doesn't seem to be a trend between AD prescription and seasons but rather that a month with high prescription usually follows two months with lower prescriptions. This suggests that colder temperatures don't seem to be associated with increased SAD/mental distress in people living in Scotland compared to warmer temperatures._   
 
 Now we are going to look at whether Health Boards trends are stable across months, to identify whether some parts of Scotland are affected by seasons more than others. 
 
-**Figure 3: Comparison of AD prescription/1k population per Health Boards, from January to June 2025**
+**Figure 2: Comparison of AD prescription/1k population per Health Boards, from January to June 2025**
 ```{r, fig.width=12,fig.height=8} 
 
 data_jan_to_june2025 %>% 
@@ -173,6 +122,8 @@ data_jan_to_june2025 %>%
 _From Figure 3 we can see that AD prescription for each Health Board did not change across months, but maintained a pattern. Only small differences are observed in the month of April. Therefore, there are not some parts of Scotland that are more affected by SAD/mental distress compared to others, according to data from January to June 2025._
 
 Next, we are going to look at whether lack of central heating is correlated with higher prescription of ADs. 
+
+First, we are going to look at the number of households lacking central heating according to the Scottish Census 2022.
 
 ```{r}
 central_heating_per_HB <- data_jan_to_june2025 %>% 
@@ -198,19 +149,7 @@ central_heating_per_HB %>%
 
 ```
 
-**Figure 4: Number of households lacking central heating/1k population across Health Boards** 
-```{r}
-central_heating_per_HB %>% 
-  ggplot(aes(x = hb_name, y = household_per_1k)) + 
-  geom_col() +
-  labs(y = "Number of households",
-       x = "Health Boards",
-       title = "Households/1k population lacking central in each Health Board") +
-  theme_classic()+
-  coord_flip()
-```
-
-_From table 3 and Figure 4 we can see that some Health Boards have more houses lacking central heating compared to others, with the highest number attributed to NHS Orkney._
+_From table 3 we can see that some Health Boards have more houses lacking central heating compared to others, with the highest number attributed to NHS Orkney._
 
 ### Therefore, will AD prescription be higher in those Health Boards?
 If so, then there might be a link between cold houses and worsening of mental health.
@@ -237,6 +176,8 @@ AD_and_heating_comparison %>%
 _Figure 5 shows that there doesn't seem to be a link between lack of central heating and AD prescription. As we can see, the bar with the highest proportion of households without heating eg. NHS Highland, has a smaller proportion of AD prescription compared to eg. NHS Forth Valley which has one of the smallest proportions of households lacking central heating but has a greater proportion of AD prescription._
 
 Overall, we can conclude that in Scotland, there doesn't seem to be a recent worsening of mental health related to colder temperatures and lack of central heating. Nevertheless, lack of central heating can still affect the health and wellbeing of individuals and therefore the government should still ensure that people live in good housing conditions.
+
+Future studies should focus on comparing monthly trends from January to December, to give a more comprehensive view of seasonal patterns. Moreover, links between AD prescription and lack of central heating could be looked at further by investigating, for example, whether the elderly, who are more likely to spend time at home, are more affected compared to other age groups, or whether trends change depending on demographics (Clair, Baker, 2022).
 
 
 **REFERENCES:**
