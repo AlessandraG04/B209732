@@ -173,7 +173,7 @@ AD_and_heating_comparison %>%
     coord_flip()
 ```
 
-_Figure 3 shows that there doesn't seem to be a link between lack of central heating and AD prescription. As we can see, one of the bars with the highest proportion of households without heating eg. NHS Highland, has a smaller proportion of AD prescription compared to eg. NHS Forth Valley which has one of the smallest proportions of households lacking central heating but has a greater proportion of AD prescription._
+_Figure 3 shows that there doesn't seem to be a link between lack of central heating and AD prescription. As we can see, one of the bars with the highest proportion of households without heating eg. NHS Highland, has a smaller proportion of AD prescription compared to eg. NHS Forth Valley which has one of the smallest proportions of households lacking central heating but has a greater proportion of AD prescription (Yi, no date)._
 
 Overall, we can conclude that in Scotland, there doesn't seem to be a recent worsening of mental health related to colder temperatures and lack of central heating. Nevertheless, cold housing conditions can still affect the health and wellbeing of individuals and therefore the government should still ensure that people live in good housing conditions.
 
