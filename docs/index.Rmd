@@ -97,7 +97,7 @@ data_jan_to_june2025 %>%
 
 ```
 
-_Figure 1 shows that there doesn't seem to be a trend between AD prescription and seasons but rather that a month with high prescription usually follows two months with lower prescriptions. This suggests that colder temperatures don't seem to be associated with increased SAD/mental distress in people living in Scotland compared to warmer temperatures._   
+_Figure 1 shows that there doesn't seem to be a trend between AD prescription and seasons but rather that a month with high prescription usually follows two months with lower prescriptions. This suggests that colder temperatures are not associated with increased SAD/mental distress in people living in Scotland compared to warmer temperatures._   
 
 Now we are going to look at whether Health Boards trends are stable across months, to identify whether some parts of Scotland are affected by seasons more than others. 
 
