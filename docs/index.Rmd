@@ -35,9 +35,9 @@ The data used in this report can be found in the Public Health Scotland data set
 
 * Health Boards (HB) names and codes: https://www.opendata.nhs.scot/dataset/geography-codes-and-labels/resource/652ff726-e676-4a20-abda-435b98dd7bdc
 
-* housing data: https://www.scotlandscensus.gov.uk/webapi/jsf/tableView/tableView.xhtml
+* housing data: https://www.scotlandscensus.gov.uk/webapi/jsf/tableView/tableView.xhtml (Scotland's Census 2022 - National Records of Scotland, Table UV407 - Central heating)
 
-* population data: https://www.scotlandscensus.gov.uk/webapi/jsf/tableView/tableView.xhtml
+* population data: https://www.scotlandscensus.gov.uk/webapi/jsf/tableView/tableView.xhtml (Scotland's Census 2022 - National Records of Scotland, Table UV102a - Age (single year) by sex All people)
 ```{r}
 #Open data - January 2025 to June 2025 
 data_jan_to_june2025 <- read_csv("https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/9de908b3-9c28-4cc3-aa32-72350a0579d1/download/hb_pitc2025_01_06.csv")%>% 
