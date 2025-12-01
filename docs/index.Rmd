@@ -9,9 +9,9 @@ output:
 
 A study by Clair and Baker (2022) has reported that living in cold homes could have detrimental effects on mental health. Their study, carried out in the UK, has found an increase in mental distress in participants who were unable to keep their house warm. The mental distress experienced by the participants in the study could be attributed to reduced feelings of autonomy, effects on sleep and as a result of feeling cold all the time. The latter is of particular concern in winter months (Clair and Baker, 2022). 
 
-Winter is a time in which some people may experience seasonal affective disorder (SAD), as a result of being exposed to less hours of light. This is a type of depression and could be exacerbated by factors such as living in colder houses, such as those lacking central heating ( _Understanding seasonal affective disorder (SAD)_, 2025). By looking at the data available in the Scottish Census 2022, a number of households across Scotland currently lack central heating.
+Winter is a time in which some people may experience seasonal affective disorder (SAD), as a result of being exposed to less hours of light. This is a type of depression and could be exacerbated by factors such as living in colder houses, such as those lacking central heating ( _Understanding seasonal affective disorder (SAD)_, 2025). By looking at the data available in the Scottish Census 2022, a number of households across Scotland currently have no heating.
 
-This report will investigate the link between lack of central heating and SAD/mental distress by looking at antidepressants (ADs) prescription across all the Health Boards in Scotland. This is because ADs are commonly prescribed as a treatment for SAD and mental distress such as increased anxiety. Data across Health Boards will be used to identify patterns across Scotland. ( _Overview - seasonal affective disorder (SAD)_, 2025). 
+This report will investigate the link between cold housing conditions and SAD/mental distress by looking at antidepressants (ADs) prescription across all the Health Boards in Scotland. This is because ADs are commonly prescribed as a treatment for SAD and mental distress such as increased anxiety. Data across Health Boards will be used to identify patterns across Scotland. ( _Overview - seasonal affective disorder (SAD)_, 2025). 
 
 **The importance of this investigation is to gain the government's attention regarding housing conditions and its importance in relation to mental health (Clair and Baker, 2022)**
 
@@ -121,7 +121,7 @@ data_jan_to_june2025 %>%
 
 _From Figure 2 we can see that AD prescription for each Health Board did not change across months, but maintained a pattern. Only small differences are observed in the month of April. Therefore, there are not some parts of Scotland that are more affected by SAD/mental distress compared to others, according to data from January to June 2025._
 
-Next, we are going to look at whether lack of central heating is correlated with higher prescription of ADs. 
+Next, we are going to look at whether colder houses are correlated with higher prescription of ADs. 
 
 First, we are going to look at the number of households lacking central heating according to the Scottish Census 2022.
 
@@ -149,12 +149,12 @@ central_heating_per_HB %>%
 
 ```
 
-_From table 1 we can see that some Health Boards have more houses lacking central heating compared to others, with the highest number attributed to NHS Orkney._
+_From table 1 we can see that some Health Boards have more houses with no heating compared to others, with the highest number attributed to NHS Orkney._
 
 **Therefore, will AD prescription be higher in those Health Boards?**
 If so, then there might be a link between cold houses and worsening of mental health.
 
-**Figure 3:Comparison of ADs and lack of central heating, per 1k population**
+**Figure 3:Comparison of ADs and lack of central heating/1k population**
 ```{r, fig.width=12,fig.height=8}
 
 AD_and_heating_comparison <- data_jan_to_june2025 %>% 
@@ -175,7 +175,7 @@ AD_and_heating_comparison %>%
 
 _Figure 3 shows that there doesn't seem to be a link between lack of central heating and AD prescription. As we can see, one of the bars with the highest proportion of households without heating eg. NHS Highland, has a smaller proportion of AD prescription compared to eg. NHS Forth Valley which has one of the smallest proportions of households lacking central heating but has a greater proportion of AD prescription._
 
-Overall, we can conclude that in Scotland, there doesn't seem to be a recent worsening of mental health related to colder temperatures and lack of central heating. Nevertheless, lack of central heating can still affect the health and wellbeing of individuals and therefore the government should still ensure that people live in good housing conditions.
+Overall, we can conclude that in Scotland, there doesn't seem to be a recent worsening of mental health related to colder temperatures and lack of central heating. Nevertheless, cold housing conditions can still affect the health and wellbeing of individuals and therefore the government should still ensure that people live in good housing conditions.
 
 Future studies should focus on comparing monthly trends from January to December, to give a more comprehensive view of seasonal patterns. Moreover, links between AD prescription and lack of central heating could be looked at further by investigating, for example, whether the elderly, who are more likely to spend time at home, are more affected compared to other age groups, or whether trends change depending on demographics (Clair, Baker, 2022).
 
